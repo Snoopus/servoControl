@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import pigpio
+from gpiozero import Servo
+from gpiozero.pins.pigpio import PiGPIOFactory
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -9,50 +10,43 @@ CORS(app)  # Enable CORS for all routes
 HORIZONTAL_SERVO_PIN = 17  # Left/Right servo
 VERTICAL_SERVO_PIN = 27    # Up/Down servo
 
-# Servo position limits (in microseconds for pigpio)
-MIN_PULSE = 500   # Minimum pulse width
-MAX_PULSE = 2500  # Maximum pulse width
-STEP = 100        # Movement step size
+# Use pigpio factory for better servo control
+factory = PiGPIOFactory()
 
-# Initialize pigpio
-pi = pigpio.pi()
+# Initialize servos with custom pulse widths
+horizontal_servo = Servo(HORIZONTAL_SERVO_PIN, min_pulse_width=0.5/1000, max_pulse_width=2.5/1000, pin_factory=factory)
+vertical_servo = Servo(VERTICAL_SERVO_PIN, min_pulse_width=0.5/1000, max_pulse_width=2.5/1000, pin_factory=factory)
 
-# Current servo positions (start at center)
-horizontal_position = 1500
-vertical_position = 1500
+# Servo value range is -1 to 1, we'll use 0 (center) as starting position
+STEP = 0.1  # Movement step size in servo value units
 
-# Set initial positions
-pi.set_servo_pulsewidth(HORIZONTAL_SERVO_PIN, horizontal_position)
-pi.set_servo_pulsewidth(VERTICAL_SERVO_PIN, vertical_position)
+# Set initial positions (0 = center)
+horizontal_servo.value = 0
+vertical_servo.value = 0
 
 @app.route('/button-press', methods=['POST'])
 def button_press():
-    global horizontal_position, vertical_position
-    
     data = request.get_json()
     direction = data.get('direction')
     
     print(f"Button pressed: {direction}")
     
     # Update servo positions based on direction
+    # Servo values range from -1 (min) to 1 (max)
     if direction == 'left':
-        horizontal_position = max(MIN_PULSE, horizontal_position - STEP)
-        pi.set_servo_pulsewidth(HORIZONTAL_SERVO_PIN, horizontal_position)
+        horizontal_servo.value = max(-1, horizontal_servo.value - STEP)
     elif direction == 'right':
-        horizontal_position = min(MAX_PULSE, horizontal_position + STEP)
-        pi.set_servo_pulsewidth(HORIZONTAL_SERVO_PIN, horizontal_position)
+        horizontal_servo.value = min(1, horizontal_servo.value + STEP)
     elif direction == 'up':
-        vertical_position = max(MIN_PULSE, vertical_position - STEP)
-        pi.set_servo_pulsewidth(VERTICAL_SERVO_PIN, vertical_position)
+        vertical_servo.value = max(-1, vertical_servo.value - STEP)
     elif direction == 'down':
-        vertical_position = min(MAX_PULSE, vertical_position + STEP)
-        pi.set_servo_pulsewidth(VERTICAL_SERVO_PIN, vertical_position)
+        vertical_servo.value = min(1, vertical_servo.value + STEP)
     
     return jsonify({
         'status': 'success',
         'direction': direction,
-        'horizontal_position': horizontal_position,
-        'vertical_position': vertical_position
+        'horizontal_position': horizontal_servo.value,
+        'vertical_position': vertical_servo.value
     }), 200
 
 if __name__ == '__main__':
@@ -63,3 +57,5 @@ if __name__ == '__main__':
         pi.set_servo_pulsewidth(HORIZONTAL_SERVO_PIN, 0)
         pi.set_servo_pulsewidth(VERTICAL_SERVO_PIN, 0)
         pi.stop()
+horizontal_servo.close()
+vertical_servo.close()
