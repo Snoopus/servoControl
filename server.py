@@ -54,8 +54,5 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', port=5000, debug=True)
     finally:
         # Cleanup on exit
-        pi.set_servo_pulsewidth(HORIZONTAL_SERVO_PIN, 0)
-        pi.set_servo_pulsewidth(VERTICAL_SERVO_PIN, 0)
-        pi.stop()
-horizontal_servo.close()
-vertical_servo.close()
+        horizontal_servo.close()
+        vertical_servo.close()
