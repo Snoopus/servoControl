@@ -27,6 +27,24 @@ async function sendButtonPress(direction) {
     }
 }
 
+async function sendHome() {
+    try {
+        const url = `${endpoint}/home`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({})
+        });
+        
+        const data = await response.json();
+        console.log('API Response:', data);
+    } catch (error) {
+        console.error('Error sending home command:', error);
+    }
+}
+
 // Add event listeners
 upButton.addEventListener('click', () => {
     console.log('Up button clicked');
@@ -50,5 +68,5 @@ rightButton.addEventListener('click', () => {
 
 homeButton.addEventListener('click', () => {
     console.log('Home button clicked');
-    sendButtonPress('home');
+    sendHome();
 });
