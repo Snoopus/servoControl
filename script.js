@@ -3,14 +3,16 @@ const upButton = document.getElementById('up');
 const downButton = document.getElementById('down');
 const leftButton = document.getElementById('left');
 const rightButton = document.getElementById('right');
+const homeButton = document.getElementById('home');
 
 // API endpoint
-const API_URL = 'http://192.168.1.3:5000/button-press';
+const endpoint = 'http://192.168.1.3:5000';
 
 // Function to send button press to API
 async function sendButtonPress(direction) {
     try {
-        const response = await fetch(API_URL, {
+        const url = `${endpoint}/button-press`;
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -44,4 +46,9 @@ leftButton.addEventListener('click', () => {
 rightButton.addEventListener('click', () => {
     console.log('Right button clicked');
     sendButtonPress('right');
+});
+
+homeButton.addEventListener('click', () => {
+    console.log('Home button clicked');
+    sendButtonPress('home');
 });

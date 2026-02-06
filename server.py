@@ -66,6 +66,19 @@ def button_press():
         'vertical_position': vertical_servo.value
     }), 200
 
+@app.route('/home', methods=['POST'])
+def home_position():
+    # Move servos to home position (center)
+    gradual_move(horizontal_servo, 0)
+    gradual_move(vertical_servo, 0)
+    
+    return jsonify({
+        'status': 'success',
+        'direction': 'home',
+        'horizontal_position': horizontal_servo.value,
+        'vertical_position': vertical_servo.value
+    }), 200
+
 if __name__ == '__main__':
     try:
         app.run(host='0.0.0.0', port=5000, debug=True)
